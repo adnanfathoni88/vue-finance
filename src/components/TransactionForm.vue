@@ -105,12 +105,7 @@ async function addTransaction() {
   };
 
   try {
-    await axios.post(SHEETDB_API, { data: [newData] });
-
-    // save to localstorage
-    const cached = JSON.parse(localStorage.getItem("transactionData")) || [];
-    cached.push(newData);
-    localStorage.setItem("transactionData", JSON.stringify(cached));
+    await axios.post(`${SHEETDB_API}?sheet=transactions`, { data: [newData] });
 
     // reset form
     date.value = "";
@@ -136,13 +131,6 @@ function formatNominal(e) {
 
 // get category
 async function getCategory() {
-  const cachedCategories = localStorage.getItem("categoriesData");
-  if (cachedCategories) {
-    categories.value = JSON.parse(cachedCategories);
-    console.log("Categories loaded from cache:", categories.value);
-    return;
-  }
-
   axios
     .get(`${SHEETDB_API}?sheet=categories`)
     .then((response) => {

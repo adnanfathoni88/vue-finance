@@ -79,7 +79,11 @@
               :key="i"
               class="border-b border-neutral-700 hover:bg-neutral-700/40"
             >
-              <td class="p-2 w-28">{{ item.date }}</td>
+              <td class="p-2 w-40">
+                <span>
+                  {{ formatDate(item.date) }}
+                </span>
+              </td>
               <td
                 class="p-2 font-medium"
                 :class="{
@@ -131,16 +135,9 @@ console.log("selectedCategory:", selectedCategory);
 // Fetch data
 async function fetchTransactions() {
   try {
-    const cached = localStorage.getItem("transactionData");
-    if (cached) {
-      transactions.value = JSON.parse(cached);
-      transactions.value.sort((a, b) => (a.date < b.date ? 1 : -1));
-    } else {
-      const res = await axios.get(`${SHEETDB_API}?sheet=transactions`);
-      transactions.value = res.data;
-      transactions.value.sort((a, b) => (a.date < b.date ? 1 : -1));
-      localStorage.setItem("transactionData", JSON.stringify(res.data));
-    }
+    const res = await axios.get(`${SHEETDB_API}?sheet=transactions`);
+    transactions.value = res.data;
+    transactions.value.sort((a, b) => (a.date < b.date ? 1 : -1));
   } catch (err) {
     console.error("Failed to fetch transactions:", err);
   }
@@ -168,13 +165,6 @@ const filteredTransactions = computed(() => {
 
 // get category
 async function getCategory() {
-  const cachedCategories = localStorage.getItem("categoriesData");
-  if (cachedCategories) {
-    categories.value = JSON.parse(cachedCategories);
-    console.log("Categories loaded from cache:", categories.value);
-    return;
-  }
-
   axios
     .get(`${SHEETDB_API}?sheet=categories`)
     .then((response) => {
@@ -196,5 +186,14 @@ function formatRupiah(value) {
   return Number(value).toLocaleString("id-ID", {
     minimumFractionDigits: 0,
   });
+}
+
+// format tanggal 2025-11-11T00:00:00.000Z => 11-11-2025
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
 }
 </script>

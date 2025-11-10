@@ -115,15 +115,8 @@ const thisYear = new Date().getFullYear();
 // Fetch data
 async function fetchTransactions() {
   try {
-    const cached = localStorage.getItem("transactionData");
-    if (cached) {
-      transactions.value = JSON.parse(cached);
-      console.log("Loaded transactions from cache");
-    } else {
-      const res = await axios.get(`${SHEETDB_API}?sheet=transactions`);
-      transactions.value = res.data;
-      localStorage.setItem("transactionData", JSON.stringify(res.data));
-    }
+    const res = await axios.get(`${SHEETDB_API}?sheet=transactions`);
+    transactions.value = res.data;
   } catch (err) {
     console.error("Failed to fetch transactions:", err);
   }
@@ -167,5 +160,14 @@ function formatRupiah(value) {
   return Number(value).toLocaleString("id-ID", {
     minimumFractionDigits: 0,
   });
+}
+
+// format tanggal 2025-11-11T00:00:00.000Z => 11-11-2025
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
 }
 </script>
