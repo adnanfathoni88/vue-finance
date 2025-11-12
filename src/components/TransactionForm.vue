@@ -2,7 +2,7 @@
   <form @submit.prevent="addTransaction" class="p-4 rounded-xl">
     <div class="grid gap-3">
       <!-- date -->
-      <div class="flex flex-col gap-2">
+      <div class="flex flex-col gap-2 w-full">
         <label class="text-neutral-400 text-sm p-0 m-0 font-semibold"
           >Date</label
         >
@@ -60,6 +60,20 @@
           @input="formatNominal"
           class="text-neutral-400 bg-neutral-950 rounded p-2 border border-neutral-600 focus:outline-none focus:ring-2 focus:ring-neutral-500"
         />
+      </div>
+
+      <!-- desc -->
+      <div class="flex flex-col gap-2 w-full">
+        <label class="text-neutral-400 text-sm p-0 m-0 font-semibold"
+          >Description</label
+        >
+        <textarea
+          v-model="description"
+          type="text"
+          placeholder="Description (optional)"
+          rows="3"
+          class="text-neutral-400 bg-neutral-950 rounded p-2 border border-neutral-600 focus:outline-none focus:ring-2 focus:ring-neutral-500"
+        ></textarea>
       </div>
 
       <!-- Tombol simpan -->

@@ -13,6 +13,7 @@ import {
   faFilterCircleXmark,
   faFilter,
   faPlusCircle,
+  faEye,
 } from "@fortawesome/free-solid-svg-icons";
 
 library.add(
@@ -25,7 +26,8 @@ library.add(
   faArrowUp,
   faFilterCircleXmark,
   faFilter,
-  faPlusCircle
+  faPlusCircle,
+  faEye
 );
 
 export default FontAwesomeIcon;

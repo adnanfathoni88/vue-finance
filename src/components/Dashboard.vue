@@ -72,7 +72,7 @@
               :key="i"
               class="border-b border-neutral-700 hover:bg-neutral-700/40"
             >
-              <td class="p-2 w-28">{{ item.date }}</td>
+              <td class="p-2">{{ formatDate(item.date) }}</td>
               <td
                 class="p-2 font-medium"
                 :class="{
@@ -168,6 +168,6 @@ function formatDate(dateString) {
   const day = String(date.getDate()).padStart(2, "0");
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const year = date.getFullYear();
-  return `${day}-${month}-${year}`;
+  return `${day}/${month}/${year}`;
 }
 </script>
