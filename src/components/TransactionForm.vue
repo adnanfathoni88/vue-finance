@@ -100,11 +100,13 @@ const date = ref(currentDate);
 const type = ref(currentType);
 const nominal = ref("");
 const displayNominal = ref("");
+const description = ref("");
 const categories = ref([]);
 const category = ref("");
 const isSubmitting = ref(false);
 
 const SHEETDB_API = import.meta.env.VITE_SHEETDB_API;
+const SHEETDB_POST_API = import.meta.env.VITE_SHEETDB_POST_API;
 
 async function addTransaction() {
   if (isSubmitting.value) return;
@@ -116,10 +118,26 @@ async function addTransaction() {
     type: type.value,
     nominal: nominal.value,
     category: category.value,
+    description: description.value,
   };
 
   try {
-    await axios.post(`${SHEETDB_API}?sheet=transactions`, { data: [newData] });
+    fetch(`${SHEETDB_POST_API}?sheet=transactions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ data: [newData] }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Success:", data);
+        alert("Data successfully saved");
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        alert("Failed to save data (fetch)");
+      });
 
     // reset form
     date.value = "";
@@ -127,8 +145,6 @@ async function addTransaction() {
     nominal.value = "";
     displayNominal.value = "";
     category.value = "";
-
-    alert("Data successfully saved");
   } catch (err) {
     console.error(err);
     alert("Failed to save data");
