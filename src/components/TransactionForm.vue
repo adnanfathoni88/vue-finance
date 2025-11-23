@@ -55,8 +55,6 @@
         <input
           v-model="displayNominal"
           type="text"
-          inputmode="numeric"
-          pattern="[0-9]*"
           placeholder="Nominal"
           required
           @input="formatNominal"
@@ -115,12 +113,10 @@ async function addTransaction() {
 
   isSubmitting.value = true;
 
-  const formatedDate = new Date(date.value).toISOString().split("T")[0];
-
   const newData = {
-    date: formatedDate,
+    date: date.value,
     type: type.value,
-    nominal: parseInt(nominal.value),
+    nominal: nominal.value,
     category: category.value,
     description: description.value,
   };
