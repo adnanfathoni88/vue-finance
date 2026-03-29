@@ -1,8 +1,34 @@
 <template>
   <div class="min-h-screen bg-neutral-900 text-white py-6">
-    <h1 class="text-3xl text-neutral-400 font-bold mb-6 text-center">
-      Dashboard
-    </h1>
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl text-neutral-400 font-bold">
+        Dashboard
+      </h1>
+
+      <!-- filter bulan tahun -->
+      <div class="flex items-center space-x-2">
+        <select
+          id="month"
+          v-model="thisMonth"
+          class="bg-neutral-800 text-white p-1 rounded"
+        >
+          <option v-for="m in 12" :key="m" :value="m">
+            {{ new Date(0, m - 1).toLocaleString("en-US", { month: "long" }) }}
+          </option>
+        </select>
+
+        <select
+          id="year"
+          v-model="thisYear"
+          class="bg-neutral-800 text-white p-1 rounded"
+        >
+          <option v-for="y in 5" :key="y" :value="2021 + y">
+            {{ 2021 + y }}
+          </option>
+        </select>
+      </div>
+    </div>
+
 
     <!-- Summary -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -103,32 +129,40 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, watch } from "vue";
 import CategoryPieChart from "./CategoryPieChart.vue";
 import axios from "axios";
 
 const SHEETDB_API = import.meta.env.VITE_SHEETDB_API;
-const transactions = ref([]);
-const thisMonth = new Date().getMonth() + 1; // Bulan sekarang (0-11, jadi ditambah 1)
-const thisYear = new Date().getFullYear();
+const allTransactions = ref([]);
+const thisMonth = ref(new Date().getMonth() + 1);
+const thisYear = ref(new Date().getFullYear());
 
-// Fetch data
+// Fetch all transactions
 async function fetchTransactions() {
   try {
     const res = await axios.get(`${SHEETDB_API}?sheet=transactions`);
-    transactions.value = res.data;
+    allTransactions.value = res.data;
   } catch (err) {
     console.error("Failed to fetch transactions:", err);
   }
+}
 
-  // this month, this year
-  transactions.value = transactions.value.filter((tx) => {
+// Filter transactions by selected month and year
+const transactions = computed(() => {
+  return allTransactions.value.filter((tx) => {
     const txDate = new Date(tx.date);
     return (
-      txDate.getMonth() + 1 === thisMonth && txDate.getFullYear() === thisYear
+      txDate.getMonth() + 1 === thisMonth.value &&
+      txDate.getFullYear() === thisYear.value
     );
   });
-}
+});
+
+// Watch for month/year changes and log
+watch([thisMonth, thisYear], () => {
+  console.log(`Filtering: Month ${thisMonth.value}, Year ${thisYear.value}`);
+});
 
 onMounted(fetchTransactions);
 

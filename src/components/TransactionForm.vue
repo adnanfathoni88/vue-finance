@@ -122,22 +122,17 @@ async function addTransaction() {
   };
 
   try {
-    fetch(`${SHEETDB_POST_API}?sheet=transactions`, {
+    const response = await fetch(`${SHEETDB_POST_API}?sheet=transactions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ data: [newData] }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Success:", data);
-        alert("Data successfully saved");
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-        alert("Failed to save data (fetch)");
-      });
+    });
+
+    const data = await response.json();
+    console.log("Success:", data);
+    alert("Data successfully saved");
 
     // reset form
     date.value = "";
@@ -145,11 +140,12 @@ async function addTransaction() {
     nominal.value = "";
     displayNominal.value = "";
     category.value = "";
+    description.value = "";
   } catch (err) {
-    console.error(err);
+    console.error("Error:", err);
     alert("Failed to save data");
   } finally {
-    isSubmitting.value = false; // selesai loading
+    isSubmitting.value = false;
   }
 }
 
