@@ -105,7 +105,7 @@ const categories = ref([]);
 const category = ref("");
 const isSubmitting = ref(false);
 
-const SHEETDB_API = import.meta.env.VITE_SHEETDB_API;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const SHEETDB_POST_API = import.meta.env.VITE_SHEETDB_POST_API;
 
 async function addTransaction() {
@@ -158,7 +158,7 @@ function formatNominal(e) {
 // get category
 async function getCategory() {
   axios
-    .get(`${SHEETDB_API}?sheet=categories`)
+    .get(`${API_BASE_URL}/categories`)
     .then((response) => {
       console.log("Categories fetched:", response.data);
       categories.value = response.data;

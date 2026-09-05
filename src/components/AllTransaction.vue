@@ -166,6 +166,7 @@ import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 const SHEETDB_API = import.meta.env.VITE_SHEETDB_API;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const transactions = ref([]);
 const categories = ref([]);
@@ -223,7 +224,7 @@ const filteredTransactions = computed(() => {
 // get category
 async function getCategory() {
   axios
-    .get(`${SHEETDB_API}?sheet=categories`)
+    .get(`${API_BASE_URL}/categories`)
     .then((response) => {
       console.log("Categories fetched:", response.data);
       categories.value = response.data;
