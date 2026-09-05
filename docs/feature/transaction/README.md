@@ -42,13 +42,11 @@ Project ini memakai **dua sumber data**:
 
 | Variabel | Nilai | Peran |
 |----------|-------|-------|
-| `VITE_API_BASE_URL` | `https://2d06-103-76-107-26.ngrok-free.app` | URL base **Backend REST** untuk baca kategori (`GET /categories`) |
-| `VITE_SHEETDB_API` | `https://script.google.com/macros/s/xxxxxx` | URL base Google Apps Script untuk **baca** transaksi (GET) |
-| `VITE_SHEETDB_POST_API` | `https://sheetdb.io/api/v1/xxxxx` | URL base SheetDB.io untuk **tulis** transaksi (POST) |
+| `VITE_API_BASE_URL` | `https://finance-bot.katmanfatahoni.workers.dev` | URL base **Backend REST** (Cloudflare Workers) untuk kategori & transaksi |
+| `VITE_SHEETDB_API` | `https://script.google.com/macros/s/xxxxxx` | URL base Google Apps Script untuk **baca** transaksi (GET) — **dukungan Sheets dihapus seiring migrasi** |
+| `VITE_SHEETDB_POST_API` | `https://sheetdb.io/api/v1/xxxxx` | URL base SheetDB.io untuk **tulis** transaksi (POST) — **dukungan Sheets dihapus seiring migrasi** |
 
 Contoh isi TERSEDIA di **`.env.example`** — salin ke `.env` dan sesuaikan nilai aslinya. Variabel dibaca via `import.meta.env.VITE_*`.
-
-> **Penting:** URL ngrok bersifat sementara (free tier) dan bisa berubah setiap tunnel dijalankan ulang. Perbarui `VITE_API_BASE_URL` di `.env` saat tunnel berganti.
 
 ## Skema Data
 

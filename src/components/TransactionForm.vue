@@ -25,8 +25,8 @@
           required
           class="text-neutral-400 bg-neutral-950 rounded p-2 border border-neutral-600 focus:outline-none focus:ring-2 focus:ring-neutral-500"
         >
-          <option value="Income">Income</option>
-          <option value="Outcome">Outcome</option>
+          <option value="income">Income</option>
+          <option value="outcome">Outcome</option>
         </select>
       </div>
 
@@ -41,7 +41,7 @@
           class="text-neutral-400 bg-neutral-950 rounded p-2 border border-neutral-600 focus:outline-none focus:ring-2 focus:ring-neutral-500"
         >
           <option disabled value="">Select Category</option>
-          <option v-for="item in categories" :key="item.id" :value="item.name">
+          <option v-for="item in categories" :key="item.id" :value="item.id">
             {{ item.name }}
           </option>
         </select>
@@ -94,7 +94,7 @@ import axios from "axios";
 
 // date now
 const currentDate = new Date().toISOString().split("T")[0];
-const currentType = "Outcome";
+const currentType = "outcome";
 
 const date = ref(currentDate);
 const type = ref(currentType);
@@ -106,7 +106,6 @@ const category = ref("");
 const isSubmitting = ref(false);
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-const SHEETDB_POST_API = import.meta.env.VITE_SHEETDB_POST_API;
 
 async function addTransaction() {
   if (isSubmitting.value) return;
@@ -116,34 +115,28 @@ async function addTransaction() {
   const newData = {
     date: date.value,
     type: type.value,
-    nominal: nominal.value,
-    category: category.value,
-    description: description.value,
+    category_id: category.value,
+    nominal: Number(nominal.value),
+    description: description.value.trim() || null,
   };
 
   try {
-    const response = await fetch(`${SHEETDB_POST_API}?sheet=transactions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ data: [newData] }),
-    });
+    const response = await axios.post(`${API_BASE_URL}/transactions`, newData);
 
-    const data = await response.json();
-    console.log("Success:", data);
+    console.log("Success:", response.data);
     alert("Data successfully saved");
 
     // reset form
     date.value = "";
-    type.value = "";
+    type.value = currentType;
     nominal.value = "";
     displayNominal.value = "";
     category.value = "";
     description.value = "";
   } catch (err) {
+    const message = err.response?.data?.error?.message;
     console.error("Error:", err);
-    alert("Failed to save data");
+    alert(message || "Failed to save data");
   } finally {
     isSubmitting.value = false;
   }
