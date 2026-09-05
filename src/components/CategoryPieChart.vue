@@ -24,14 +24,14 @@ const props = defineProps({
 
 // 🔹 Filter hanya Outcome
 const outcomeData = computed(() =>
-  props.transactions.filter((tx) => tx.type === "Outcome")
+  props.transactions.filter((tx) => tx.type === "outcome")
 );
 
 // 🔹 Kelompokkan total per kategori
 const grouped = computed(() => {
   const result = {};
   outcomeData.value.forEach((tx) => {
-    const cat = tx.category || "Uncategorized";
+    const cat = tx.category_name || "Uncategorized";
     const nominal = parseInt(tx.nominal) || 0;
     result[cat] = (result[cat] || 0) + nominal;
   });

@@ -102,14 +102,14 @@
               <td
                 class="p-2 font-medium"
                 :class="{
-                  'text-green-400': item.type === 'Income',
-                  'text-red-400': item.type === 'Outcome',
+                  'text-green-400': item.type === 'income',
+                  'text-red-400': item.type === 'outcome',
                 }"
               >
-                <span v-if="item.type === 'Income'">In</span>
+                <span v-if="item.type === 'income'">In</span>
                 <span v-else>Out</span>
               </td>
-              <td class="p-2">{{ item.category }}</td>
+              <td class="p-2">{{ item.category_name }}</td>
               <td class="p-2 text-right">
                 {{ formatRupiah(item.nominal) }}
               </td>
@@ -133,7 +133,7 @@ import { ref, onMounted, computed, watch } from "vue";
 import CategoryPieChart from "./CategoryPieChart.vue";
 import axios from "axios";
 
-const SHEETDB_API = import.meta.env.VITE_SHEETDB_API;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const allTransactions = ref([]);
 const thisMonth = ref(new Date().getMonth() + 1);
 const thisYear = ref(new Date().getFullYear());
@@ -141,7 +141,7 @@ const thisYear = ref(new Date().getFullYear());
 // Fetch all transactions
 async function fetchTransactions() {
   try {
-    const res = await axios.get(`${SHEETDB_API}?sheet=transactions`);
+    const res = await axios.get(`${API_BASE_URL}/transactions`);
     allTransactions.value = res.data;
   } catch (err) {
     console.error("Failed to fetch transactions:", err);
@@ -169,13 +169,13 @@ onMounted(fetchTransactions);
 // Perhitungan
 const totalIncome = computed(() => {
   return transactions.value
-    .filter((t) => t.type === "Income")
+    .filter((t) => t.type === "income")
     .reduce((sum, t) => sum + Number(t.nominal || 0), 0);
 });
 
 const totalOutcome = computed(() => {
   return transactions.value
-    .filter((t) => t.type === "Outcome")
+    .filter((t) => t.type === "outcome")
     .reduce((sum, t) => sum + Number(t.nominal || 0), 0);
 });
 
