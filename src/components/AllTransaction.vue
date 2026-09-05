@@ -31,8 +31,8 @@
       class="rounded p-2 bg-neutral-800 border border-neutral-700 text-neutral-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
     >
       <option value="">All Types</option>
-      <option value="Income">Income</option>
-      <option value="Outcome">Outcome</option>
+      <option value="income">Income</option>
+      <option value="outcome">Outcome</option>
     </select>
 
     <!-- Category -->
@@ -88,14 +88,14 @@
               <td
                 class="p-2 font-medium"
                 :class="{
-                  'text-green-400': item.type === 'Income',
-                  'text-red-400': item.type === 'Outcome',
+                  'text-green-400': item.type === 'income',
+                  'text-red-400': item.type === 'outcome',
                 }"
               >
-                <span v-if="item.type === 'Income'">In</span>
+                <span v-if="item.type === 'income'">In</span>
                 <span v-else>Out</span>
               </td>
-              <td class="p-2">{{ item.category }}</td>
+              <td class="p-2">{{ item.category_name }}</td>
               <td class="p-2 text-right">
                 {{ formatRupiah(item.nominal) }}
               </td>
@@ -137,10 +137,10 @@
         <strong>Type</strong> <br />
         {{ selectedItem.type }}
       </p>
-      <p class="mb-2">
-        <strong>Category</strong> <br />
-        {{ selectedItem.category }}
-      </p>
+<p class="mb-2">
+          <strong>Category</strong> <br />
+          {{ selectedItem.category_name }}
+        </p>
       <p class="mb-2">
         <strong>Nominal</strong> <br />
         {{ formatRupiah(selectedItem.nominal) }}
@@ -165,7 +165,6 @@ import { ref, onMounted, computed } from "vue";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
-const SHEETDB_API = import.meta.env.VITE_SHEETDB_API;
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const transactions = ref([]);
@@ -193,7 +192,7 @@ function closeModal() {
 // Fetch data
 async function fetchTransactions() {
   try {
-    const res = await axios.get(`${SHEETDB_API}?sheet=transactions`);
+    const res = await axios.get(`${API_BASE_URL}/transactions`);
     transactions.value = res.data;
     transactions.value.sort((a, b) => (a.date < b.date ? 1 : -1));
   } catch (err) {
@@ -205,14 +204,14 @@ async function fetchTransactions() {
 const filteredTransactions = computed(() => {
   return transactions.value.filter((tx) => {
     const matchSearch =
-      tx.category?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      tx.category_name?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
       tx.type?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
       tx.date?.includes(searchQuery.value) ||
-      tx.nominal?.includes(searchQuery.value);
+      String(tx.nominal ?? "").includes(searchQuery.value);
 
     const matchType = !selectedType.value || tx.type === selectedType.value;
     const matchCategory =
-      !selectedCategory.value || tx.category === selectedCategory.value;
+      !selectedCategory.value || tx.category_name === selectedCategory.value;
 
     const matchMonth =
       !selectedMonth.value || tx.date.startsWith(selectedMonth.value);
