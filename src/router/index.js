@@ -3,6 +3,7 @@ import DashboardPage from "../pages/DashboardPage.vue";
 import TransactionsPage from "../pages/TransactionsPage.vue";
 import AllTransaction from "../pages/AllTransaction.vue";
 import CategoriesPage from "../pages/CategoriesPage.vue";
+import LoginPage from "../pages/LoginPage.vue";
 
 const routes = [
   { path: "/", name: "Dashboard", component: DashboardPage },
@@ -13,6 +14,12 @@ const routes = [
     component: AllTransaction,
   },
   { path: "/categories", name: "Categories", component: CategoriesPage },
+  {
+    path: "/login",
+    name: "Login",
+    component: LoginPage,
+    meta: { guestOnly: true },
+  },
 ];
 
 const router = createRouter({
