@@ -1,5 +1,5 @@
 <template>
-  <header class="border-b border-neutral-700">
+  <header v-if="isAuthenticated" class="border-b border-neutral-700">
     <!-- desktop -->
     <nav class="hidden md:flex justify-center gap-6 p-4">
       <RouterLink
@@ -45,6 +45,9 @@
 
 <script setup>
 import { ref } from "vue";
+import { useAuth } from "../composables/useAuth";
+
+const { isAuthenticated } = useAuth();
 
 const links = [
   { to: "/", label: "Dashboard" },
