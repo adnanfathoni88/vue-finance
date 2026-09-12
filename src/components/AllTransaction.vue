@@ -1,22 +1,12 @@
 <template>
-  <div class="flex justify-between items-center mb-4">
-    <h1 class="text-3xl text-neutral-400 font-bold text-center">
+  <div class="mb-4">
+    <h1 class="text-3xl text-neutral-400 font-bold text-start">
       All Transactions
     </h1>
-
-    <button
-      @click="isFilter = !isFilter"
-      class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-    >
-      <font-awesome-icon icon="fa-solid fa-filter" />
-    </button>
   </div>
 
-  <!-- filter -->
-  <div
-    v-if="isFilter"
-    class="grid md:grid-cols-4 sm:grid-cols-2 gap-4 mb-6 mt-6"
-  >
+  <!-- filter (mobile) -->
+  <div class="md:hidden flex flex-col gap-4 mb-6 mt-6">
     <!-- Search -->
     <input
       v-model="searchQuery"
@@ -25,34 +15,43 @@
       class="rounded p-2 bg-neutral-800 border border-neutral-700 text-neutral-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
     />
 
-    <!-- Type -->
-    <select
-      v-model="selectedType"
-      class="rounded p-2 bg-neutral-800 border border-neutral-700 text-neutral-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+    <button
+      @click="showFilterModal = true"
+      class="relative bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500 flex items-center justify-center gap-2"
     >
-      <option value="">All Types</option>
-      <option value="income">Income</option>
-      <option value="outcome">Outcome</option>
-    </select>
+      <font-awesome-icon icon="fa-solid fa-filter" />
+      Filter
+      <span
+        v-if="activeFilterCount"
+        class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center"
+      >
+        {{ activeFilterCount }}
+      </span>
+    </button>
+  </div>
 
-    <!-- Category -->
-    <select
-      v-model="selectedCategory"
-      class="rounded p-2 bg-neutral-800 border border-neutral-700 text-neutral-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-    >
-      <option value="">All Categories</option>
-      <option v-for="cat in categories" :key="cat.name" :value="cat.name">
-        {{ cat.name }}
-      </option>
-    </select>
-
-    <!-- Month -->
+  <!-- filter (desktop) -->
+  <div class="hidden md:grid md:grid-cols-4 gap-4 mb-6 mt-6">
+    <!-- Search -->
     <input
-      v-model="selectedMonth"
-      type="month"
-      class="rounded w-full p-2 bg-neutral-800 border border-neutral-700 text-neutral-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+      v-model="searchQuery"
+      type="text"
+      placeholder="Search..."
+      class="rounded p-2 bg-neutral-800 border border-neutral-700 text-neutral-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+    />
+
+    <TransactionFilterFields
+      class="contents"
+      v-model:type="selectedType"
+      v-model:category="selectedCategory"
+      v-model:month="selectedMonth"
+      :categories="categories"
     />
   </div>
+
+  <p v-if="activeFilterText" class="text-sm text-neutral-400 mb-4">
+    {{ activeFilterText }}
+  </p>
 
   <!-- History Table -->
   <div class="min-h-screen bg-neutral-900 text-white py-6">
@@ -158,26 +157,74 @@
       </div>
     </div>
   </div>
+
+  <!-- Filter Modal (mobile) -->
+  <div
+    v-if="showFilterModal"
+    class="fixed inset-0 flex items-center justify-center bg-black/60 z-50 md:hidden"
+  >
+    <div class="bg-neutral-800 text-white p-6 rounded-2xl w-96 shadow-lg">
+      <h2 class="text-xl font-semibold mb-3">Filter</h2>
+      <hr class="py-2 opacity-50" />
+
+      <TransactionFilterFields
+        class="flex flex-col gap-4"
+        v-model:type="selectedType"
+        v-model:category="selectedCategory"
+        v-model:month="selectedMonth"
+        :categories="categories"
+      />
+
+      <div class="mt-5 flex justify-end gap-2">
+        <button
+          class="px-4 py-1 bg-neutral-600 hover:bg-neutral-500 rounded-md"
+          @click="resetFilters"
+        >
+          Reset
+        </button>
+        <button
+          class="px-4 py-1 bg-indigo-500 hover:bg-indigo-600 rounded-md"
+          @click="showFilterModal = false"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from "vue";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+import TransactionFilterFields from "./TransactionFilterFields.vue";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const transactions = ref([]);
 const categories = ref([]);
-const isFilter = ref(false);
 
 // filter
 const searchQuery = ref("");
 const selectedType = ref("");
 const selectedCategory = ref("");
 const selectedMonth = ref("");
+const showFilterModal = ref(false);
 const showModal = ref(false);
 const selectedItem = ref(null);
+
+function resetFilters() {
+  selectedType.value = "";
+  selectedCategory.value = "";
+  selectedMonth.value = "";
+}
+
+const activeFilterCount = computed(
+  () =>
+    [selectedType.value, selectedCategory.value, selectedMonth.value].filter(
+      Boolean
+    ).length
+);
 
 function openModal(item) {
   selectedItem.value = item;
@@ -218,6 +265,27 @@ const filteredTransactions = computed(() => {
 
     return matchSearch && matchType && matchCategory && matchMonth;
   });
+});
+
+// ringkasan filter yang sedang aktif
+const activeFilterText = computed(() => {
+  const parts = [];
+
+  if (searchQuery.value) parts.push(`Search: "${searchQuery.value}"`);
+  if (selectedType.value)
+    parts.push(`Type: ${selectedType.value === "income" ? "Income" : "Outcome"}`);
+  if (selectedCategory.value)
+    parts.push(`Category: ${selectedCategory.value}`);
+  if (selectedMonth.value) {
+    const [year, month] = selectedMonth.value.split("-");
+    const label = new Date(Number(year), Number(month) - 1).toLocaleString(
+      "en-US",
+      { month: "long", year: "numeric" }
+    );
+    parts.push(`Month: ${label}`);
+  }
+
+  return parts.length ? `Filter By — ${parts.join(" ; ")}` : "";
 });
 
 // get category
