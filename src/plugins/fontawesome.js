@@ -16,6 +16,8 @@ import {
   faEye,
   faPen,
   faTrash,
+  faBars,
+  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 
 library.add(
@@ -31,7 +33,9 @@ library.add(
   faPlusCircle,
   faEye,
   faPen,
-  faTrash
+  faTrash,
+  faBars,
+  faXmark
 );
 
 export default FontAwesomeIcon;
