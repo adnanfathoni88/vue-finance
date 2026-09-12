@@ -195,11 +195,9 @@
 
 <script setup>
 import { ref, onMounted, computed } from "vue";
-import axios from "axios";
+import api from "../services/api";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import TransactionFilterFields from "./TransactionFilterFields.vue";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const transactions = ref([]);
 const categories = ref([]);
@@ -239,7 +237,7 @@ function closeModal() {
 // Fetch data
 async function fetchTransactions() {
   try {
-    const res = await axios.get(`${API_BASE_URL}/transactions`);
+    const res = await api.get("/transactions");
     transactions.value = res.data;
     transactions.value.sort((a, b) => (a.date < b.date ? 1 : -1));
   } catch (err) {
@@ -290,8 +288,8 @@ const activeFilterText = computed(() => {
 
 // get category
 async function getCategory() {
-  axios
-    .get(`${API_BASE_URL}/categories`)
+  api
+    .get("/categories")
     .then((response) => {
       console.log("Categories fetched:", response.data);
       categories.value = response.data;

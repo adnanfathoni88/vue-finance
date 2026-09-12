@@ -5,6 +5,5 @@
 </template>
 
 <script setup>
-import axios from "axios";
 import AllTransaction from "../components/AllTransaction.vue";
 </script>

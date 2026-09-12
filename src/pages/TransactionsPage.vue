@@ -8,6 +8,5 @@
 </template>
 
 <script setup>
-import axios from "axios";
 import TransactionForm from "../components/TransactionForm.vue";
 </script>

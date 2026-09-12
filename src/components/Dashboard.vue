@@ -131,9 +131,8 @@
 <script setup>
 import { ref, onMounted, computed, watch } from "vue";
 import CategoryPieChart from "./CategoryPieChart.vue";
-import axios from "axios";
+import api from "../services/api";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const allTransactions = ref([]);
 const thisMonth = ref(new Date().getMonth() + 1);
 const thisYear = ref(new Date().getFullYear());
@@ -141,7 +140,7 @@ const thisYear = ref(new Date().getFullYear());
 // Fetch all transactions
 async function fetchTransactions() {
   try {
-    const res = await axios.get(`${API_BASE_URL}/transactions`);
+    const res = await api.get("/transactions");
     allTransactions.value = res.data;
   } catch (err) {
     console.error("Failed to fetch transactions:", err);

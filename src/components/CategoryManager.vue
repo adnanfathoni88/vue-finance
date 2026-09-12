@@ -105,9 +105,7 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import axios from "axios";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import api, { getErrorMessage } from "../services/api";
 
 const categories = ref([]);
 const showModal = ref(false);
@@ -119,13 +117,9 @@ function cacheCategories() {
   localStorage.setItem("categoriesData", JSON.stringify(categories.value));
 }
 
-function getErrorMessage(err, fallback) {
-  return err.response?.data?.error?.message || fallback;
-}
-
 async function fetchCategories() {
   try {
-    const res = await axios.get(`${API_BASE_URL}/categories`);
+    const res = await api.get("/categories");
     categories.value = res.data;
     cacheCategories();
   } catch (err) {
@@ -165,12 +159,12 @@ async function saveCategory() {
 
   try {
     if (editing.value) {
-      await axios.put(`${API_BASE_URL}/categories/${editing.value.id}`, {
+      await api.put(`/categories/${editing.value.id}`, {
         name,
       });
       alert("Category successfully updated");
     } else {
-      await axios.post(`${API_BASE_URL}/categories`, { name });
+      await api.post("/categories", { name });
       alert("Category successfully saved");
     }
 
@@ -188,7 +182,7 @@ async function removeCategory(item) {
   if (!confirm(`Delete category "${item.name}"?`)) return;
 
   try {
-    await axios.delete(`${API_BASE_URL}/categories/${item.id}`);
+    await api.delete(`/categories/${item.id}`);
     alert("Category successfully deleted");
     await fetchCategories();
   } catch (err) {

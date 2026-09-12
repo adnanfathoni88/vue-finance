@@ -90,7 +90,7 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import axios from "axios";
+import api, { getErrorMessage } from "../services/api";
 
 // date now
 const currentDate = new Date().toISOString().split("T")[0];
@@ -104,8 +104,6 @@ const description = ref("");
 const categories = ref([]);
 const category = ref("");
 const isSubmitting = ref(false);
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 async function addTransaction() {
   if (isSubmitting.value) return;
@@ -121,7 +119,7 @@ async function addTransaction() {
   };
 
   try {
-    const response = await axios.post(`${API_BASE_URL}/transactions`, newData);
+    const response = await api.post("/transactions", newData);
 
     console.log("Success:", response.data);
     alert("Data successfully saved");
@@ -134,9 +132,8 @@ async function addTransaction() {
     category.value = "";
     description.value = "";
   } catch (err) {
-    const message = err.response?.data?.error?.message;
     console.error("Error:", err);
-    alert(message || "Failed to save data");
+    alert(getErrorMessage(err, "Failed to save data"));
   } finally {
     isSubmitting.value = false;
   }
@@ -150,8 +147,8 @@ function formatNominal(e) {
 
 // get category
 async function getCategory() {
-  axios
-    .get(`${API_BASE_URL}/categories`)
+  api
+    .get("/categories")
     .then((response) => {
       console.log("Categories fetched:", response.data);
       categories.value = response.data;
