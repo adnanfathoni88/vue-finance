@@ -1,7 +1,7 @@
 <template>
   <header v-if="isAuthenticated" class="border-b border-neutral-700">
     <!-- desktop -->
-    <nav class="hidden md:flex justify-center gap-6 p-4">
+    <nav class="hidden md:flex justify-center items-center gap-6 p-4">
       <RouterLink
         v-for="link in links"
         :key="link.to"
@@ -11,6 +11,14 @@
       >
         {{ link.label }}
       </RouterLink>
+
+      <button
+        class="text-neutral-400 hover:text-red-400 font-semibold flex items-center gap-2 focus:outline-none"
+        @click="onLogout"
+      >
+        <!-- <font-awesome-icon icon="fa-solid fa-right-from-bracket" /> -->
+        Logout
+      </button>
     </nav>
 
     <!-- mobile -->
@@ -39,15 +47,25 @@
       >
         {{ link.label }}
       </RouterLink>
+
+      <button
+        class="text-left text-neutral-400 hover:text-red-400 font-semibold p-4 flex items-center gap-2 focus:outline-none"
+        @click="onLogout"
+      >
+        <font-awesome-icon icon="fa-solid fa-right-from-bracket" />
+        Logout
+      </button>
     </nav>
   </header>
 </template>
 
 <script setup>
 import { ref } from "vue";
+import { useRouter } from "vue-router";
 import { useAuth } from "../composables/useAuth";
 
-const { isAuthenticated } = useAuth();
+const router = useRouter();
+const { isAuthenticated, logout } = useAuth();
 
 const links = [
   { to: "/", label: "Dashboard" },
@@ -57,4 +75,10 @@ const links = [
 ];
 
 const isMenuOpen = ref(false);
+
+async function onLogout() {
+  isMenuOpen.value = false;
+  await logout();
+  router.replace("/login");
+}
 </script>

@@ -4,10 +4,7 @@
       @submit.prevent="onSubmit"
       class="w-full max-w-sm bg-neutral-800 p-6 rounded-2xl shadow"
     >
-      <h1 class="text-2xl font-semibold mb-1 text-center">Login</h1>
-      <p class="text-neutral-400 text-sm mb-5 text-center">
-        Masukkan password untuk melanjutkan
-      </p>
+      <h1 class="text-2xl font-semibold mb-4 text-center">Login</h1>
 
       <label
         for="password"
