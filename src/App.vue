@@ -23,6 +23,14 @@
       >
         All Transactions
       </RouterLink>
+
+      <RouterLink
+        to="/categories"
+        class="text-neutral-400 hover:text-indigo-400 font-semibold"
+        active-class="text-indigo-400"
+      >
+        Categories
+      </RouterLink>
     </nav>
 
     <main class="p-6 flex justify-center">

@@ -1,8 +1,8 @@
 # Fitur Transaksi — Dokumentasi Project Vue Finance
 
-Dokumen ini menjelaskan cara kerja fitur transaksi pada project ini (`vue-finance`) dari sisi frontend dan backend eksternal yang dipakai.
+Dokumen ini menjelaskan cara kerja fitur transaksi pada project ini (`vue-finance`).
 
-> **Catatan:** `docs/be/categories.md` berasal dari project backend (BE) yang kini benar-benar dipakai untuk data kategori — endpoint `GET /categories` implementasinya sesuai dokumen itu. Data transaksi masih memakai Google Sheets (lihat [Fase Migrasi](#fase-migrasi)).
+> **Catatan:** Kategori **dan** transaksi sekarang sama-sama diambil dari **Backend REST (BE)**. Endpoint `GET /categories` sesuai `docs/be/categories.md`; endpoint transaksi (`GET`/`POST /transactions`) kontraknya disusun dari perilaku penggunaan pada frontend.
 
 ## Ringkasan
 
@@ -14,39 +14,29 @@ Dokumen ini menjelaskan cara kerja fitur transaksi pada project ini (`vue-financ
 
 ## Arsitektur & Alur Data
 
-Project ini memakai **dua sumber data**:
-
-- **Backend REST (BE)** — untuk data **kategori** (URL `ngrok-free.app`, `GET /categories`).
-- **Google Sheets** — untuk data **transaksi**, via Google Apps Script (baca) dan SheetDB.io (tulis).
+Project ini memakai **satu sumber data**: **Backend REST (BE)**.
 
 ```
-┌─────────────┐   GET /categories                           ┌──────────────────────┐
-│   Frontend  │ ──────────────────────────────────────────► │ Backend REST (BE)     │
-│   (Vue 3)   │                                             │  (kategori, read-only) │
-│             │                                             └──────────────────────┘
-│             │   GET ?sheet=transactions                   ┌──────────────────────┐
-│             │ ──────────────────────────────────────────► │ Google Apps Script    │
-│             │                                             │  (read-only)          │
-│             │   POST ?sheet=transactions { data: [...] }  └──────────────────────┘
-│             │ ──────────────────────────────────────────► │ SheetDB.io            │
-└─────────────┘                                             │  (write)              │
-                                                           └──────────┬───────────┘
-                                                                      ▼
-                                                           ┌──────────────────────┐
-                                                           │ Google Sheet          │
-                                                           │  - transactions       │
-                                                           └──────────────────────┘
+┌─────────────┐   GET /categories      ┌──────────────────────────┐
+│   Frontend  │ ─────────────────────► │ Backend REST             │
+│   (Vue 3)   │   GET /transactions    │  - kategori              │
+│             │ ─────────────────────► │  - transaksi             │
+│             │   POST /transactions   │                          │
+│             │ ─────────────────────► │                          │
+└─────────────┘                        └──────────────────────────┘
 ```
+
+Seluruh request memakai `VITE_API_BASE_URL` sebagai base URL.
 
 ## Konfigurasi Environment
 
 | Variabel | Nilai | Peran |
 |----------|-------|-------|
 | `VITE_API_BASE_URL` | `https://finance-bot.katmanfatahoni.workers.dev` | URL base **Backend REST** (Cloudflare Workers) untuk kategori & transaksi |
-| `VITE_SHEETDB_API` | `https://script.google.com/macros/s/xxxxxx` | URL base Google Apps Script untuk **baca** transaksi (GET) — **dukungan Sheets dihapus seiring migrasi** |
-| `VITE_SHEETDB_POST_API` | `https://sheetdb.io/api/v1/xxxxx` | URL base SheetDB.io untuk **tulis** transaksi (POST) — **dukungan Sheets dihapus seiring migrasi** |
 
-Contoh isi TERSEDIA di **`.env.example`** — salin ke `.env` dan sesuaikan nilai aslinya. Variabel dibaca via `import.meta.env.VITE_*`.
+Contoh isi TERSEDIA di **`.env.example`**.
+
+> **Catatan:** `VITE_SHEETDB_API` dan `VITE_SHEETDB_POST_API` masih ada di `.env.example` tetapi **tidak lagi dipakai** oleh kode — dukungan Google Sheets dihapus seiring migrasi (lihat [Fase Migrasi](#fase-migrasi)).
 
 ## Skema Data
 
@@ -59,27 +49,28 @@ Contoh isi TERSEDIA di **`.env.example`** — salin ke `.env` dan sesuaikan nila
 
 Response `GET /categories`: `[{ "id": 1, "name": "Makanan" }, ...]` — sesuai kontrak `docs/be/categories.md`.
 
-### Transaksi (dari Google Sheet `transactions`)
+### Transaksi (dari Backend REST)
 
 | Kolom | Tipe | Contoh | Keterangan |
 |-------|------|--------|------------|
 | `date` | string (ISO) | `2026-09-06` | Format `YYYY-MM-DD` |
-| `type` | string | `Income` / `Outcome` | Enum 2 nilai |
-| `nominal` | string angka | `"1500000"` | Disimpan tanpa separator `.` |
-| `category` | string | `"Makanan"` | **Nama** kategori (bukan id) |
-| `description` | string | `"Belanja bulanan"` | Opsional, boleh kosong |
+| `type` | string | `income` / `outcome` | Huruf kecil |
+| `nominal` | angka | `1500000` | Dikirim sebagai number |
+| `category_id` | angka | `1` | Dikirim saat create, merujuk `id` kategori |
+| `category_name` | string | `"Makanan"` | Dikembalikan BE saat read |
+| `description` | string / null | `"Belanja bulanan"` | Opsional, boleh kosong |
 
 ## Endpoint yang Digunakan
 
 | Layanan | Method | Endpoint | Dipakai oleh | Fungsi |
 |---------|--------|----------|--------------|--------|
 | Backend REST | GET | `/categories` | `TransactionForm.vue`, `AllTransaction.vue` | Ambil semua kategori |
-| Apps Script | GET | `?sheet=transactions` | `Dashboard.vue`, `AllTransaction.vue` | Ambil semua transaksi |
-| SheetDB.io | POST | `?sheet=transactions` | `TransactionForm.vue` | Simpan transaksi baru |
+| Backend REST | GET | `/transactions` | `Dashboard.vue`, `AllTransaction.vue` | Ambil semua transaksi |
+| Backend REST | POST | `/transactions` | `TransactionForm.vue` | Simpan transaksi baru |
 
 ## Kontrak Payload
 
-**GET `/categories` → 200 (response:**
+**GET `/categories` → 200 (response):**
 ```json
 [
   { "id": 1, "name": "Makanan" },
@@ -87,29 +78,26 @@ Response `GET /categories`: `[{ "id": 1, "name": "Makanan" }, ...]` — sesuai k
 ]
 ```
 
-**POST `?sheet=transactions` (body:**
+**POST `/transactions` (body):**
 ```json
 {
-  "data": [
-    {
-      "date": "2026-09-06",
-      "type": "Outcome",
-      "nominal": "1500000",
-      "category": "Makanan",
-      "description": "Belanja bulanan"
-    }
-  ]
+  "date": "2026-09-06",
+  "type": "outcome",
+  "category_id": 1,
+  "nominal": 1500000,
+  "description": "Belanja bulanan"
 }
 ```
 
-**GET `?sheet=transactions` → 200 (response:**
+**GET `/transactions` → 200 (response):**
 ```json
 [
   {
     "date": "2026-09-06",
-    "type": "Outcome",
-    "nominal": "1500000",
-    "category": "Makanan",
+    "type": "outcome",
+    "nominal": 1500000,
+    "category_id": 1,
+    "category_name": "Makanan",
     "description": "Belanja bulanan"
   }
 ]
@@ -119,32 +107,21 @@ Response `GET /categories`: `[{ "id": 1, "name": "Makanan" }, ...]` — sesuai k
 
 | Data | Penanganan |
 |------|-----------|
-| `nominal` saat input | Karakter non-digit dibuang (`formatNominal`); angka disimpan tanpa separator, mis. `1.000.000` → dikirim `"1000000"` |
+| `nominal` saat input | Karakter non-digit dibuang (`formatNominal`); angka disimpan tanpa separator, mis. `1.000.000` → dikirim `1000000` sebagai number |
 | Tampilan nominal | `Number(value).toLocaleString("id-ID")` → `1.000.000` |
 | Tanggal input | `<input type="date">` → nilai `YYYY-MM-DD` |
 | Tampilan tanggal | `2026-09-06` → `06/09/2026` |
-| Kategori pada transaksi | Disimpan sebagai **nama string** (nilai `<option>` = `item.name`) — sumber daftar kategori dari BE REST |
-
-## Perbedaan dengan `docs/be/categories.md`
-
-| Aspek | Project ini | `docs/be/categories.md` |
-|-------|-------------|--------------------------|
-| Backend | Kategori: BE REST (ngrok); transaksi: Google Sheets | REST API khusus kategori |
-| Relasi kategori | Transaksi menyimpan nama (`category`) | Mewajibkan `category_id` |
-| CRUD kategori | Dipakai read-only (belum ada UI kelola) | GET/POST/PUT/DELETE lengkap |
-| Validasi | Frontend (`alert`) | Backend (400/404/409) |
-| Error handling | `alert("Failed to save data")` | Kode status HTTP 4xx/5xx |
+| Kategori pada transaksi | Dikirim sebagai **`category_id`** (nilai `<option>` = `item.id`); daftar kategori dari `GET /categories`. Saat read, ditampilkan lewat `category_name` |
 
 ## Keterbatasan & Catatan
 
-- **Kode Apps Script & kode BE tidak ada di repo** — kontrak disusun dari perilaku penggunaan pada frontend.
-- **Validasi data transaksi terjadi di sisi frontend**, backend tidak memvalidasi.
+- **Kode BE tidak ada di repo** — kontrak endpoint transaksi disusun dari perilaku penggunaan pada frontend.
 - **Tidak ada edit/hapus transaksi** — hanya create + read.
-- Kategori dipakai read-only untuk dropdown; UI kelola kategori (POST/PUT/DELETE `/categories`) belum dibuat.
+- Kategori dipakai read-only untuk dropdown pada halaman transaksi; CRUD kategori tersedia di halaman `/categories` (lihat `docs/feature/category/README.md`).
 
 ## Fase Migrasi
 
 | Fase | Status | Keterangan |
 |------|--------|------------|
-| 1. Kategori → BE REST | ✅ Selesai | `getCategory()` di `TransactionForm.vue` & `AllTransaction.vue` kini `GET /categories` |
-| 2. Transaksi → BE REST | ⏳ Berikutnya | Pindahkan POST/GET transaksi dari SheetDB/Apps Script ke endpoint transaksi BE |
+| 1. Kategori → BE REST | ✅ Selesai | `getCategory()` di `TransactionForm.vue` & `AllTransaction.vue` memakai `GET /categories` |
+| 2. Transaksi → BE REST | ✅ Selesai | `GET`/`POST /transactions` di `Dashboard.vue`, `AllTransaction.vue`, & `TransactionForm.vue` memakai BE REST (SheetDB/Apps Script tidak lagi dipakai) |
