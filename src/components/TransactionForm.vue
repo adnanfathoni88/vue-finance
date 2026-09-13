@@ -41,7 +41,11 @@
           class="text-neutral-400 bg-neutral-950 rounded p-2 border border-neutral-600 focus:outline-none focus:ring-2 focus:ring-neutral-500"
         >
           <option disabled value="">Select Category</option>
-          <option v-for="item in categories" :key="item.id" :value="item.id">
+          <option
+            v-for="item in availableCategories"
+            :key="item.id"
+            :value="item.id"
+          >
             {{ item.name }}
           </option>
         </select>
@@ -89,7 +93,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
 import api, { getErrorMessage } from "../services/api";
 
 // date now
@@ -104,6 +108,16 @@ const description = ref("");
 const categories = ref([]);
 const category = ref("");
 const isSubmitting = ref(false);
+
+const availableCategories = computed(() =>
+  categories.value.filter((item) => item.type === type.value)
+);
+
+watch(type, () => {
+  if (!availableCategories.value.some((item) => item.id === category.value)) {
+    category.value = "";
+  }
+});
 
 async function addTransaction() {
   if (isSubmitting.value) return;
