@@ -23,6 +23,8 @@ Project ini memakai **satu sumber data**: **Backend REST (BE)**.
 │             │ ─────────────────────► │  - transaksi             │
 │             │   POST /transactions   │                          │
 │             │ ─────────────────────► │                          │
+│             │   DELETE /transactions │                          │
+│             │ ─────────────────────► │                          │
 └─────────────┘                        └──────────────────────────┘
 ```
 
@@ -53,6 +55,7 @@ Response `GET /categories`: `[{ "id": 1, "name": "Makanan" }, ...]` — sesuai k
 
 | Kolom | Tipe | Contoh | Keterangan |
 |-------|------|--------|------------|
+| `id` | angka | `12` | Identifier unik transaksi, dipakai untuk hapus |
 | `date` | string (ISO) | `2026-09-06` | Format `YYYY-MM-DD` |
 | `type` | string | `income` / `outcome` | Huruf kecil |
 | `nominal` | angka | `1500000` | Dikirim sebagai number |
@@ -67,6 +70,7 @@ Response `GET /categories`: `[{ "id": 1, "name": "Makanan" }, ...]` — sesuai k
 | Backend REST | GET | `/categories` | `TransactionForm.vue`, `AllTransaction.vue` | Ambil semua kategori |
 | Backend REST | GET | `/transactions` | `Dashboard.vue`, `AllTransaction.vue` | Ambil semua transaksi |
 | Backend REST | POST | `/transactions` | `TransactionForm.vue` | Simpan transaksi baru |
+| Backend REST | DELETE | `/transactions/:id` | `AllTransaction.vue` | Hapus transaksi berdasarkan `id` |
 
 ## Kontrak Payload
 
@@ -93,6 +97,7 @@ Response `GET /categories`: `[{ "id": 1, "name": "Makanan" }, ...]` — sesuai k
 ```json
 [
   {
+    "id": 12,
     "date": "2026-09-06",
     "type": "outcome",
     "nominal": 1500000,
@@ -102,6 +107,8 @@ Response `GET /categories`: `[{ "id": 1, "name": "Makanan" }, ...]` — sesuai k
   }
 ]
 ```
+
+**DELETE `/transactions/:id` → 2xx (sukses):** body respons tidak dipakai frontend.
 
 ## Transformasi Format di Frontend
 
@@ -116,7 +123,7 @@ Response `GET /categories`: `[{ "id": 1, "name": "Makanan" }, ...]` — sesuai k
 ## Keterbatasan & Catatan
 
 - **Kode BE tidak ada di repo** — kontrak endpoint transaksi disusun dari perilaku penggunaan pada frontend.
-- **Tidak ada edit/hapus transaksi** — hanya create + read.
+- **Hapus transaksi** tersedia di halaman `/all-transactions` (tombol hapus di kolom Actions & detail modal); **edit transaksi** belum ada.
 - Kategori dipakai read-only untuk dropdown pada halaman transaksi; CRUD kategori tersedia di halaman `/categories` (lihat `docs/feature/category/README.md`).
 
 ## Fase Migrasi

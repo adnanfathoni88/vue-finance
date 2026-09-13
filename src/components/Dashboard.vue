@@ -73,7 +73,7 @@
       <div
         class="flex justify-between items-center border-b border-neutral-700 mb-4 pb-2"
       >
-        <h2 class="text-xl font-semibold">Latest Transactions</h2>
+        <h2 class="text-xl font-semibold">Today's Transactions</h2>
 
         <router-link
           to="/all-transactions"
@@ -90,12 +90,13 @@
               <th class="p-2">Type</th>
               <th class="p-2">Category</th>
               <th class="p-2 text-right">Nominal</th>
+              <th class="p-2 text-center"></th>
             </tr>
           </thead>
           <tbody>
             <tr
-              v-for="(item, i) in latestTransactions"
-              :key="i"
+              v-for="(item, i) in todayTransactions"
+              :key="item.id ?? i"
               class="border-b border-neutral-700 hover:bg-neutral-700/40"
             >
               <td class="p-2">{{ formatDate(item.date) }}</td>
@@ -113,18 +114,64 @@
               <td class="p-2 text-right">
                 {{ formatRupiah(item.nominal) }}
               </td>
+              <td class="p-2 text-center">
+                <button
+                  class="text-blue-400 hover:text-blue-300"
+                  @click="openModal(item)"
+                >
+                  <font-awesome-icon icon="fa-solid fa-eye" />
+                </button>
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <p v-if="!transactions.length" class="text-neutral-500 text-center mt-4">
-        No transactions yet.
+      <p v-if="!todayTransactions.length" class="text-neutral-500 text-center mt-4">
+        No transactions today.
       </p>
     </div>
 
     <!-- chart -->
     <CategoryPieChart :transactions="transactions" />
+  </div>
+
+  <!-- Modal -->
+  <div
+    v-if="showModal"
+    class="fixed inset-0 flex items-center justify-center bg-black/60 z-50"
+  >
+    <div class="bg-neutral-800 text-white p-6 rounded-2xl w-96 shadow-lg">
+      <h2 class="text-xl font-semibold mb-3">Transaction Detail</h2>
+      <hr class="py-2 opacity-50" />
+      <p class="mb-2">
+        <strong>Date</strong> <br />
+        {{ formatDate(selectedItem.date) }}
+      </p>
+      <p class="mb-2">
+        <strong>Type</strong> <br />
+        {{ selectedItem.type }}
+      </p>
+      <p class="mb-2">
+        <strong>Category</strong> <br />
+        {{ selectedItem.category_name }}
+      </p>
+      <p class="mb-2">
+        <strong>Nominal</strong> <br />
+        {{ formatRupiah(selectedItem.nominal) }}
+      </p>
+      <p class="mt-3"><strong>Description</strong> <br /></p>
+      <p class="text-neutral-300">{{ selectedItem.description }}</p>
+
+      <div class="mt-5 text-right">
+        <button
+          class="px-4 py-1 bg-neutral-600 hover:bg-neutral-500 rounded-md"
+          @click="closeModal"
+        >
+          Close
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -136,6 +183,18 @@ import api from "../services/api";
 const allTransactions = ref([]);
 const thisMonth = ref(new Date().getMonth() + 1);
 const thisYear = ref(new Date().getFullYear());
+const showModal = ref(false);
+const selectedItem = ref(null);
+
+function openModal(item) {
+  selectedItem.value = item;
+  showModal.value = true;
+}
+
+function closeModal() {
+  showModal.value = false;
+  selectedItem.value = null;
+}
 
 // Fetch all transactions
 async function fetchTransactions() {
@@ -180,12 +239,23 @@ const totalOutcome = computed(() => {
 
 const balance = computed(() => totalIncome.value - totalOutcome.value);
 
-// Tampilkan hanya 5 transaksi terakhir
-const latestTransactions = computed(() => {
-  return [...transactions.value]
-    .sort((a, b) => new Date(b.date) - new Date(a.date))
-    .slice(0, 5);
-});
+// Cek apakah sebuah tanggal jatuh pada hari ini (waktu lokal)
+function isToday(dateString) {
+  const d = new Date(dateString);
+  const now = new Date();
+  return (
+    d.getDate() === now.getDate() &&
+    d.getMonth() === now.getMonth() &&
+    d.getFullYear() === now.getFullYear()
+  );
+}
+
+// Semua transaksi hari ini, terbaru dulu
+const todayTransactions = computed(() =>
+  allTransactions.value
+    .filter((tx) => isToday(tx.date))
+    .sort((a, b) => (b.id ?? 0) - (a.id ?? 0))
+);
 
 // Format ke Rupiah
 function formatRupiah(value) {

@@ -28,6 +28,14 @@
       style="color-scheme: dark"
       class="rounded w-full p-2 bg-neutral-800 border border-neutral-700 text-neutral-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
     />
+
+    <!-- Date -->
+    <input
+      v-model="date"
+      type="date"
+      style="color-scheme: dark"
+      class="rounded w-full p-2 bg-neutral-800 border border-neutral-700 text-neutral-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+    />
   </div>
 </template>
 
@@ -42,4 +50,5 @@ defineProps({
 const type = defineModel("type");
 const category = defineModel("category");
 const month = defineModel("month");
+const date = defineModel("date");
 </script>

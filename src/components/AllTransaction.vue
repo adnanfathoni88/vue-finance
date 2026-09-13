@@ -31,7 +31,7 @@
   </div>
 
   <!-- filter (desktop) -->
-  <div class="hidden md:grid md:grid-cols-4 gap-4 mb-6 mt-6">
+  <div class="hidden md:grid md:grid-cols-5 gap-4 mb-6 mt-6">
     <!-- Search -->
     <input
       v-model="searchQuery"
@@ -45,6 +45,7 @@
       v-model:type="selectedType"
       v-model:category="selectedCategory"
       v-model:month="selectedMonth"
+      v-model:date="selectedDate"
       :categories="categories"
     />
   </div>
@@ -76,7 +77,7 @@
           <tbody>
             <tr
               v-for="(item, i) in filteredTransactions"
-              :key="i"
+              :key="item.id ?? i"
               class="border-b border-neutral-700 hover:bg-neutral-700/40"
             >
               <td class="p-2 w-28">
@@ -99,12 +100,21 @@
                 {{ formatRupiah(item.nominal) }}
               </td>
               <td class="p-2 text-center">
-                <button
-                  class="text-blue-400 hover:underline"
-                  @click="openModal(item)"
-                >
-                  <font-awesome-icon icon="fa-solid fa-eye" />
-                </button>
+                <div class="flex justify-center gap-4">
+                  <button
+                    class="text-blue-400 hover:text-blue-300"
+                    @click="openModal(item)"
+                  >
+                    <font-awesome-icon icon="fa-solid fa-eye" />
+                  </button>
+                  <button
+                    class="text-red-400 hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    :disabled="deletingId === item.id"
+                    @click="removeTransaction(item)"
+                  >
+                    <font-awesome-icon icon="fa-solid fa-trash" />
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -147,9 +157,17 @@
       <p class="mt-3"><strong>Description</strong> <br /></p>
       <p class="text-neutral-300">{{ selectedItem.description }}</p>
 
-      <div class="mt-5 text-right">
+      <div class="mt-5 flex justify-end gap-2">
         <button
-          class="px-4 py-1 bg-red-500 hover:bg-red-600 rounded-md"
+          class="px-4 py-1 bg-red-500 hover:bg-red-600 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+          :disabled="deletingId === selectedItem.id"
+          @click="removeTransaction(selectedItem)"
+        >
+          <font-awesome-icon icon="fa-solid fa-trash" class="mr-1" />
+          Delete
+        </button>
+        <button
+          class="px-4 py-1 bg-neutral-600 hover:bg-neutral-500 rounded-md"
           @click="closeModal"
         >
           Close
@@ -172,6 +190,7 @@
         v-model:type="selectedType"
         v-model:category="selectedCategory"
         v-model:month="selectedMonth"
+        v-model:date="selectedDate"
         :categories="categories"
       />
 
@@ -195,7 +214,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from "vue";
-import api from "../services/api";
+import api, { getErrorMessage } from "../services/api";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import TransactionFilterFields from "./TransactionFilterFields.vue";
 
@@ -203,23 +222,31 @@ const transactions = ref([]);
 const categories = ref([]);
 
 // filter
+const now = new Date();
+const currentMonth = `${now.getFullYear()}-${String(
+  now.getMonth() + 1
+).padStart(2, "0")}`;
+
 const searchQuery = ref("");
 const selectedType = ref("");
 const selectedCategory = ref("");
-const selectedMonth = ref("");
+const selectedMonth = ref(currentMonth);
+const selectedDate = ref("");
 const showFilterModal = ref(false);
 const showModal = ref(false);
 const selectedItem = ref(null);
+const deletingId = ref(null);
 
 function resetFilters() {
   selectedType.value = "";
   selectedCategory.value = "";
-  selectedMonth.value = "";
+  selectedMonth.value = currentMonth;
+  selectedDate.value = "";
 }
 
 const activeFilterCount = computed(
   () =>
-    [selectedType.value, selectedCategory.value, selectedMonth.value].filter(
+    [selectedType.value, selectedCategory.value, selectedDate.value].filter(
       Boolean
     ).length
 );
@@ -232,6 +259,30 @@ function openModal(item) {
 function closeModal() {
   showModal.value = false;
   selectedItem.value = null;
+}
+
+async function removeTransaction(item) {
+  if (deletingId.value) return;
+
+  const category = item.category_name ?? "No category";
+  const confirmed = confirm(
+    `Delete transaction "${category}"?\n\nDate: ${formatDate(item.date)}\nAmount: Rp${formatRupiah(item.nominal)}`
+  );
+  if (!confirmed) return;
+
+  deletingId.value = item.id;
+
+  try {
+    await api.delete(`/transactions/${item.id}`);
+    alert("Transaction successfully deleted");
+    if (selectedItem.value?.id === item.id) closeModal();
+    await fetchTransactions();
+  } catch (err) {
+    console.error("Error:", err);
+    alert(getErrorMessage(err, "Failed to delete transaction"));
+  } finally {
+    deletingId.value = null;
+  }
 }
 
 // Fetch data
@@ -258,10 +309,11 @@ const filteredTransactions = computed(() => {
     const matchCategory =
       !selectedCategory.value || tx.category_name === selectedCategory.value;
 
-    const matchMonth =
-      !selectedMonth.value || tx.date.startsWith(selectedMonth.value);
+    const matchDate = selectedDate.value
+      ? tx.date.startsWith(selectedDate.value)
+      : tx.date.startsWith(selectedMonth.value);
 
-    return matchSearch && matchType && matchCategory && matchMonth;
+    return matchSearch && matchType && matchCategory && matchDate;
   });
 });
 
@@ -274,13 +326,20 @@ const activeFilterText = computed(() => {
     parts.push(`Type: ${selectedType.value === "income" ? "Income" : "Outcome"}`);
   if (selectedCategory.value)
     parts.push(`Category: ${selectedCategory.value}`);
-  if (selectedMonth.value) {
+  if (selectedDate.value) {
+    const label = new Date(selectedDate.value).toLocaleDateString("en-US", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+    parts.push(`Date: ${label}`);
+  } else if (selectedMonth.value) {
     const [year, month] = selectedMonth.value.split("-");
     const label = new Date(Number(year), Number(month) - 1).toLocaleString(
       "en-US",
       { month: "long", year: "numeric" }
     );
-    parts.push(`Month: ${label}`);
+    parts.push(`Period: ${label}`);
   }
 
   return parts.length ? `Filter By — ${parts.join(" ; ")}` : "";
