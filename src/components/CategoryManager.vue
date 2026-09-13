@@ -19,6 +19,7 @@
             <tr class="text-neutral-400 text-sm border-b border-neutral-700">
               <th class="p-2 w-20">ID</th>
               <th class="p-2">Name</th>
+              <th class="p-2 w-28">Type</th>
               <th class="p-2 text-center w-32">Actions</th>
             </tr>
           </thead>
@@ -30,6 +31,18 @@
             >
               <td class="p-2">{{ item.id }}</td>
               <td class="p-2">{{ item.name }}</td>
+              <td class="p-2">
+                <span
+                  class="px-2 py-0.5 rounded-full text-xs font-semibold"
+                  :class="
+                    item.type === 'income'
+                      ? 'bg-green-500/20 text-green-400'
+                      : 'bg-red-500/20 text-red-400'
+                  "
+                >
+                  {{ item.type === "income" ? "Income" : "Outcome" }}
+                </span>
+              </td>
               <td class="p-2 text-center">
                 <div class="flex justify-center gap-4">
                   <button
@@ -82,6 +95,15 @@
           class="text-neutral-400 bg-neutral-950 rounded p-2 border border-neutral-600 focus:outline-none focus:ring-2 focus:ring-neutral-500"
           @keyup.enter="saveCategory"
         />
+
+        <label class="text-neutral-400 text-sm font-semibold mt-2">Type</label>
+        <select
+          v-model="formType"
+          class="text-neutral-400 bg-neutral-950 rounded p-2 border border-neutral-600 focus:outline-none focus:ring-2 focus:ring-neutral-500"
+        >
+          <option value="income">Income</option>
+          <option value="outcome">Outcome</option>
+        </select>
       </div>
 
       <div class="mt-5 flex justify-end gap-2">
@@ -111,6 +133,7 @@ const categories = ref([]);
 const showModal = ref(false);
 const editing = ref(null);
 const formName = ref("");
+const formType = ref("outcome");
 const isSubmitting = ref(false);
 
 function cacheCategories() {
@@ -131,12 +154,14 @@ async function fetchCategories() {
 function openCreate() {
   editing.value = null;
   formName.value = "";
+  formType.value = "outcome";
   showModal.value = true;
 }
 
 function openEdit(item) {
   editing.value = item;
   formName.value = item.name;
+  formType.value = item.type ?? "outcome";
   showModal.value = true;
 }
 
@@ -144,6 +169,7 @@ function closeModal() {
   showModal.value = false;
   editing.value = null;
   formName.value = "";
+  formType.value = "outcome";
 }
 
 async function saveCategory() {
@@ -155,16 +181,22 @@ async function saveCategory() {
     return;
   }
 
+  if (!["income", "outcome"].includes(formType.value)) {
+    alert("Type is required");
+    return;
+  }
+
   isSubmitting.value = true;
 
   try {
     if (editing.value) {
       await api.put(`/categories/${editing.value.id}`, {
         name,
+        type: formType.value,
       });
       alert("Category successfully updated");
     } else {
-      await api.post("/categories", { name });
+      await api.post("/categories", { name, type: formType.value });
       alert("Category successfully saved");
     }
 
