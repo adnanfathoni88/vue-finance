@@ -12,14 +12,27 @@
       >
         Password
       </label>
-      <input
-        id="password"
-        v-model="password"
-        type="password"
-        autocomplete="current-password"
-        required
-        class="mt-1 w-full text-neutral-200 bg-neutral-950 rounded p-2 border border-neutral-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-      />
+      <div class="relative mt-1">
+        <input
+          id="password"
+          v-model="password"
+          :type="showPassword ? 'text' : 'password'"
+          autocomplete="current-password"
+          required
+          class="w-full text-neutral-200 bg-neutral-950 rounded p-2 pr-10 border border-neutral-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+        <button
+          type="button"
+          @click="showPassword = !showPassword"
+          :aria-label="showPassword ? 'Hide password' : 'Show password'"
+          :aria-pressed="showPassword"
+          class="absolute inset-y-0 right-0 px-3 flex items-center text-neutral-400 hover:text-neutral-200 transition-colors"
+        >
+          <font-awesome-icon
+            :icon="showPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"
+          />
+        </button>
+      </div>
 
       <p v-if="errorMessage" class="text-red-400 text-sm mt-3">
         {{ errorMessage }}
@@ -47,6 +60,7 @@ const router = useRouter();
 const { state, login } = useAuth();
 
 const password = ref("");
+const showPassword = ref(false);
 const errorMessage = ref("");
 
 function resolveRedirect(value) {
